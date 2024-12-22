@@ -1,0 +1,54 @@
+server:
+  port: 8098
+
+spring:
+  application:
+    name: webcococo
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      #      password: KHANH2005t
+      #      username: default
+      use-redis-cache: true
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3309/WebCoCo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${MYSQL_ROOT_PASSWORD:KHANH2005t}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+jwt:
+  expiration: 2592000    # 30 days (seconds)
+  expiration-refresh-token: 5184000  # 60 days (seconds)
+  secretKey: TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI=
+  max-token: 3
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
+api:
+  prefix: /api/v1
+
+
+payment:
+  vnPay:
+    url: ${PAY_URL}
+    tmnCode: ${TMN_CODE}
+    secretKey: ${SECRET_KEY}
+    returnUrl: ${RETURN_URL}
+    version: 2.1.0
+    command: pay
+    orderType: other
