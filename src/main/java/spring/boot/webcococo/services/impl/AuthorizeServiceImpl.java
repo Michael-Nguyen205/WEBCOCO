@@ -2,12 +2,15 @@ package spring.boot.webcococo.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.boot.webcococo.entities.*;
 import spring.boot.webcococo.enums.ErrorCodeEnum;
 import spring.boot.webcococo.exceptions.AppException;
+import spring.boot.webcococo.models.mapping.PermissionModelActionRawMapping;
 import spring.boot.webcococo.models.pojos.CustomUserDetails;
 import spring.boot.webcococo.models.requests.*;
 import spring.boot.webcococo.models.response.*;
@@ -15,9 +18,9 @@ import spring.boot.webcococo.repositories.*;
 import spring.boot.webcococo.services.IAuthorizeService;
 import spring.boot.webcococo.utils.EntityCascadeDeletionUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 @Log4j2
 @RequiredArgsConstructor
@@ -30,8 +33,141 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
     private final PermissionActionModelRawRepository permissionActionModelRawRepository;
     private final EntityCascadeDeletionUtil deletionUtil;
     private final UserRepository userRepository;
-    private  final  ModelsRepository modelsRepository;
+    private final ModelsRepository modelsRepository;
     private final UsersPermissionRepository usersPermissionRepository;
+
+    private final JdbcTemplate jdbcTemplate;
+
+
+    @Override
+    public AuthorizeResponse getAuthor(Integer permissionId) {
+
+        try {
+            Permission permission = permissionRepository.findById(permissionId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
+            String query = """
+                       SELECT p.id AS permission_id\s
+                       ,p.name AS permission_name
+                       ,m.id AS model_id
+                       ,m.name AS model_name
+                       ,m.description AS model_description
+                       ,a.id  AS action_id
+                       ,a.name  AS action_name
+                       ,a.description  AS action_description
+                       ,pamr.raw_id AS raw_id
+                       FROM permission_model_action_raw pamr
+                       LEFT JOIN models m ON pamr.model_id = m.id
+                       LEFT JOIN actions a ON pamr.action_id = a.id
+                       JOIN permissions p ON pamr.permission_id  = p.id
+                       WHERE p.id = ?;
+                    """;
+            return jdbcTemplate.query(query, new Object[]{permission.getId()}, rs -> {
+                Set<PermissionModelActionRawMapping> permissionModelActionRawMappings = PermissionModelActionRawMapping.toPermissionModelActionMapping(rs);
+                log.error("permissionModelActionRawMappings:{}",permissionModelActionRawMappings.size());
+                return mapToAuthorizeResponse(permissionModelActionRawMappings.stream().toList());
+            });
+
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+
+    private AuthorizeResponse mapToAuthorizeResponse(List<PermissionModelActionRawMapping> permissionModelActionRawMappings) {
+
+        AuthorizeResponse authorizeResponse = new AuthorizeResponse();
+        PermissionModelActionRawMapping permissionModelActionRawMapping = permissionModelActionRawMappings.iterator().next();
+        PermissionResponse permissionResponse = new PermissionResponse(permissionModelActionRawMapping.getPermissionId(), permissionModelActionRawMapping.getPermissionName(),mapToModelResponseList(permissionModelActionRawMappings) );
+
+        authorizeResponse.setPermissonResponse(permissionResponse);
+        return authorizeResponse;
+    }
+
+
+
+
+    private List<ModelResponse> mapToModelResponseList(List<PermissionModelActionRawMapping> permissionModelActionRawMappings) {
+        // Bước 1: Nhóm các đối tượng theo modelId
+        Map<Integer, List<PermissionModelActionRawMapping>> groupByModelId = permissionModelActionRawMappings.stream()
+                .collect(Collectors.groupingBy(PermissionModelActionRawMapping::getModelId, Collectors.toList()));
+
+        // Bước 2: Ánh xạ các nhóm thành ModelResponse
+        return groupByModelId.entrySet().stream()
+                .map(entry -> mapToModelResponse(entry.getValue()))  // Ánh xạ các nhóm thành ModelResponse
+                .collect(Collectors.toList());  // Thu thập kết quả vào Set<ModelResponse>
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private ModelResponse mapToModelResponse(List<PermissionModelActionRawMapping> modelActionRawMappings) {
+
+        PermissionModelActionRawMapping modelMapping =  modelActionRawMappings.iterator().next();
+        ModelResponse modelResponse = new ModelResponse(modelMapping.getModelId(),modelMapping.getModelName(),modelMapping.getModelDescription(), mapToActionResponseList(modelActionRawMappings)) ;
+
+        return modelResponse;
+    }
+
+
+
+
+
+    private List<ActionResponse> mapToActionResponseList(List<PermissionModelActionRawMapping> modelActionRawMappings) {
+
+        Map<Integer, List<PermissionModelActionRawMapping>> groupByActionId = modelActionRawMappings.stream()
+                .collect(Collectors.groupingBy(PermissionModelActionRawMapping::getActionId, Collectors.toList()));
+
+        return groupByActionId.entrySet().stream()
+                .map(entry -> {
+                    PermissionModelActionRawMapping actionEntry = entry.getValue().getFirst(); // Lấy phần tử đầu tiên
+                    List<RawResponse> rawResponses = mapToRawResponseList(entry.getValue());
+
+                    // Nếu danh sách RawResponse rỗng, đặt RawIdList là null
+                    ActionResponse actionResponse = new ActionResponse(
+                            actionEntry.getActionId(),
+                            actionEntry.getActionName(),
+                            actionEntry.getActionDescription(),
+                            rawResponses.isEmpty() ? null : rawResponses // Nếu rỗng, đặt là null
+                    );
+
+                    return actionResponse;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+    private List<RawResponse> mapToRawResponseList(List<PermissionModelActionRawMapping> actionRawMappings) {
+        return actionRawMappings.stream()
+                .filter(actionRawMapping -> actionRawMapping.getRawId() != null && actionRawMapping.getRawId() != 0) // Loại bỏ null và 0
+                .map(actionRawMapping -> new RawResponse(actionRawMapping.getRawId()))
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public UserPermissionResponse addAuthor(AddAuthorForUserRequest permissionRequest) {
@@ -44,7 +180,7 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
 
         // Kiểm tra quyền đã tồn tại cho người dùng
         if (usersPermissionRepository.findByUserIdAndPermissionId(user.getId(), permissionId).isPresent()) {
-            throw new AppException(ErrorCodeEnum.USER_EXISTED,"DA TON TAI QUYEN NAY VOI NGUOI NAY");
+            throw new AppException(ErrorCodeEnum.USER_EXISTED, "DA TON TAI QUYEN NAY VOI NGUOI NAY");
         }
 
         // Nếu không có quyền, tạo quyền mới cho người dùng
@@ -83,55 +219,58 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
     }
 
 
+    private void authenticateAndAuthorize() {
+        // Lấy thông tin xác thực từ SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Kiểm tra nếu không có thông tin xác thực
+        if (authentication == null) {
+            log.error("Không tìm thấy thông tin xác thực");
+            throw new AppException(ErrorCodeEnum.UNAUTHENTICATED, "Người dùng chưa được xác thực");
+        }
+
+        // Lấy thông tin principal từ authentication
+        Object principal = authentication.getPrincipal();
+
+        // Kiểm tra nếu principal không phải là một instance của CustomUserDetails
+        if (!(principal instanceof CustomUserDetails)) {
+            log.warn("Principal không phải là instance của CustomUserDetails. Principal: {}", principal);
+            throw new AppException(ErrorCodeEnum.UNAUTHENTICATED, "Người dùng không hợp lệ");
+        }
+
+        // Ép kiểu principal sang CustomUserDetails
+//        CustomUserDetails userDetails = (CustomUserDetails) principal;
+
+//        // Kiểm tra xem người dùng có quyền "PERMISSION_ADMIN" hay không
+//        boolean isAdmin = userDetails.getAuthorities().stream()
+//                .anyMatch(permission -> "PERMISSION_ADMIN".equals(permission.getAuthority()));
+//
+//        // Nếu không có quyền ADMIN, ném ngoại lệ
+//        if (!isAdmin) {
+//            throw new AppException(ErrorCodeEnum.UNAUTHORIZED, "USER không có quyền tạo role");
+//        }
 
 
+        // Trả về thông tin người dùng đã xác thực
 
-
-
+    }
 
 
     @Override
+    @Transactional
     public AuthorizeResponse createAuthor(CreatePermissionRequest permissionRequest) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null) {
-                log.error("Không tìm thấy thông tin xác thực");
-                throw new RuntimeException("Người dùng chưa được xác thực");
-            }
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof CustomUserDetails) {
-                CustomUserDetails userDetails = (CustomUserDetails) principal;
-                userDetails.getAuthorities().forEach(authority ->
-                        log.info("Quyền: {}", authority.getAuthority())
-                );
-                boolean isAdmin = userDetails.getAuthorities().stream()
-                        .anyMatch(permission -> "PERMISSION_ADMIN".equals(permission.getAuthority())); // Kiểm tra quyền "ADMIN"
 
-                if (isAdmin) {
-                    log.info("User {} has ADMIN permission", userDetails.getUsername());
-                } else {
-                    throw new AppException(ErrorCodeEnum.UNAUTHENTICATED, "USER khong cos quuyen taoj role");
-                }
-                log.info("Authenticated user: {}", userDetails.getUsername());
-            } else {
-                log.warn("Principal is not an instance of CustomUserDetails. Principal: {}", principal);
-            }
+            authenticateAndAuthorize();
 
-
-
-
-
-
-
-            log.error("đã vao trong createAuthor");
-            Integer permissionId = permissionRequest.getId() == null ? 0 : permissionRequest.getId();
 
             // Tạo hoặc cập nhật quyền
-            Permission savedPermission = createOrUpdatePermission(permissionRequest, permissionId);
+            Permission savedPermission = createOrUpdatePermission(permissionRequest);
+
 
             // Xử lý các yêu cầu liên quan đến actions
             List<PermissionActionModelRaw> permissionActionModelRawList = new ArrayList<>();
-            List<ModelResponse> modelResponseList = processModelRequest(permissionActionModelRawList, permissionId, permissionRequest);
+            List<ModelResponse> modelResponseList = processModelRequest(permissionActionModelRawList, savedPermission.getId(), permissionRequest);
 
             log.error("modelResponseList:{}", modelResponseList);
             AuthorizeResponse authorizeResponse = createAuthorizeResponse(savedPermission, modelResponseList);
@@ -147,28 +286,22 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
             permissionActionModelRawRepository.saveAll(permissionActionModelRawList);
 
             return authorizeResponse;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
     }
 
 
-
-
-
-
-
-
-
-
     @Override
     public AuthorizeResponse updateAuthor(CreatePermissionRequest permissionRequest, Integer permissionId) {
+        authenticateAndAuthorize();
+
         if (permissionId == null) {
             throw new AppException(ErrorCodeEnum.DATA_NOT_FOUND);
         }
         // Tạo hoặc cập nhật quyền
-        Permission savedPermission = createOrUpdatePermission(permissionRequest, permissionId);
+        Permission savedPermission = createOrUpdatePermission(permissionRequest);
 
         // Xóa quyền cũ trước khi cập nhật
         clearPermissionActionsForUpdate(permissionId);
@@ -187,8 +320,9 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
     }
 
 
-    private Permission createOrUpdatePermission(CreatePermissionRequest permissionRequest, Integer permissionId) {
-        Permission existingPermission = permissionRepository.findById(permissionId)
+    @Transactional
+    protected Permission createOrUpdatePermission(CreatePermissionRequest permissionRequest) {
+        Permission existingPermission = permissionRepository.findById(permissionRequest.getId() == null ? 0 : permissionRequest.getId())
                 .orElseGet(() -> {
                     Permission newPermission = new Permission();
                     newPermission.setName(permissionRequest.getName());
@@ -235,7 +369,6 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
     }
 
 
-
     private List<RawResponse> processRawRequests(List<CreateRawRequest> rawRequestList, List<PermissionActionModelRaw> permissionActionModelRawList, Integer permissionId, Integer modelId, Integer actionId) {
         List<RawResponse> rawResponseList = new ArrayList<>();
         if (rawRequestList == null || rawRequestList.isEmpty()) {
@@ -257,11 +390,10 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
 
     private PermissionActionModelRaw createPermissionActionModelRaw(Integer permissionId, Integer modelId, Integer actionId, Integer rawId) {
 
-        log.error("permissionId:{}",permissionId);
-
-        Permission permission = permissionRepository.findById(permissionId).orElseThrow(()->new AppException(ErrorCodeEnum.DATA_NOT_FOUND,"không thấy permission này"));
-        Action action = actionsRepository.findById(actionId).orElseThrow(()->new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-        Models models = modelsRepository.findById(modelId).orElseThrow(()->new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
+        log.error("permissionId:{}", permissionId);
+        Permission permission = permissionRepository.findById(permissionId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND, "không thấy permission này"));
+        Action action = actionsRepository.findById(actionId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
+        Models models = modelsRepository.findById(modelId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
 
 
         PermissionActionModelRaw permissionActionModelRaw = new PermissionActionModelRaw();
@@ -271,7 +403,7 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
         permissionActionModelRaw.setModelId(models.getId());
         if (rawId != null) {
             permissionActionModelRaw.setRawId(rawId);
-        }else {
+        } else {
             permissionActionModelRaw.setRawId(null);
         }
 
@@ -286,7 +418,6 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
         permissionResponse.setName(savedPermission.getName());
         permissionResponse.setModelResponses(modelResponseList);
         authorizeResponse.setPermissonResponse(permissionResponse);
-
         return authorizeResponse;
     }
 

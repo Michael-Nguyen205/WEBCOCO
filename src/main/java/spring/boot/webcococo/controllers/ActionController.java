@@ -116,7 +116,6 @@ public class ActionController {
 
 
     @PreAuthorize("@authorUtils.hasAuthor('POST','ACTION',null)")
-
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse createAction(@RequestBody @Valid CreateActionRequest request) {

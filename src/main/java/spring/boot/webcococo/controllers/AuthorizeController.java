@@ -23,17 +23,35 @@ import spring.boot.webcococo.services.impl.AuthorizeServiceImpl;
 @RequiredArgsConstructor
 public class AuthorizeController {
 
-    private final AuthorizeServiceImpl permissionService;
+    private final AuthorizeServiceImpl authorizeService;
     private final PermissionRepository permissionRepository;
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AuthorizeResponse> updateAuthor(@RequestBody @Valid CreatePermissionRequest request, @PathVariable Integer id) {
-        log.error("da vao updateAuthor");
-        return permissionRepository.findById(id)
-                .map(existingPermission -> permissionService.updateAuthor(request, id))
-                .map(updatedPermission -> new ResponseEntity<>(updatedPermission, HttpStatus.OK))
-                .orElseThrow(() -> new AppException(ErrorCodeEnum.INVALID_KEY.DATA_NOT_FOUND, "khong thay permission"));
+        try {
+            return permissionRepository.findById(id)
+                    .map(existingPermission -> authorizeService.updateAuthor(request, id))
+                    .map(updatedPermission -> new ResponseEntity<>(updatedPermission, HttpStatus.OK))
+                    .orElseThrow(() -> new AppException(ErrorCodeEnum.INVALID_KEY.DATA_NOT_FOUND, "khong thay permission"));
+        } catch (AppException e) {
+            throw e; // Rethrow custom exception
+        }
+    }
+
+
+
+
+
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<AuthorizeResponse> getAuthor(@PathVariable Integer id) {
+        try {
+            return new ResponseEntity<>(authorizeService.getAuthor(id), HttpStatus.OK);
+        } catch (AppException e) {
+            throw e; // Rethrow custom exception
+        }
     }
 
     @PostMapping("")
@@ -41,7 +59,7 @@ public class AuthorizeController {
     public ResponseEntity<AuthorizeResponse> createAuthor(@RequestBody @Valid CreatePermissionRequest request) {
         log.error("da vao day");
         try {
-            AuthorizeResponse response = permissionService.createAuthor(request);
+            AuthorizeResponse response = authorizeService.createAuthor(request);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (AppException e) {
             throw e; // Rethrow custom exception
@@ -53,7 +71,7 @@ public class AuthorizeController {
     public ResponseEntity<UserPermissionResponse> addAuthorForUser(@RequestBody @Valid AddAuthorForUserRequest request) {
         log.error("da vao day");
         try {
-            UserPermissionResponse response = permissionService.addAuthor(request);
+            UserPermissionResponse response = authorizeService.addAuthor(request);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (AppException e) {
             throw e; // Rethrow custom exception
@@ -65,7 +83,7 @@ public class AuthorizeController {
     public ResponseEntity<ApiResponse> removeAuthorForUser(@RequestBody @Valid RemoveAuthorForUserRequest request) {
         log.error("da vao day");
         try {
-            UserPermissionResponse userPermissionResponse = permissionService.removeAuthorForUser(request);
+            UserPermissionResponse userPermissionResponse = authorizeService.removeAuthorForUser(request);
             return ResponseEntity.ok(new ApiResponse(null, "removeAuthorForUser successfully", null, userPermissionResponse));
         } catch (AppException e) {
             throw e; // Rethrow custom exception

@@ -17,4 +17,7 @@ public interface IAuthorizeService {
 
     UserPermissionResponse removeAuthorForUser(RemoveAuthorForUserRequest permissionRequest);
 
+
+    AuthorizeResponse getAuthor(Integer permissionId);
+
 }

@@ -19,7 +19,7 @@ public class PermissionResponse {
     private Integer id;
     private String name;
 
-    @JsonProperty("Model")
+    @JsonProperty("models")
     private List<ModelResponse> modelResponses;
 }
 

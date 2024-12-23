@@ -15,15 +15,15 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ActionResponse {
 
-    @JsonProperty("action_id")
+    @JsonProperty("id")
     private Integer actionId;
 
-    @JsonProperty("action_name")
+    @JsonProperty("name")
     private String name;
 
-    @JsonProperty("action_description")
+    @JsonProperty("description")
     private String description;
 
-    @JsonProperty("RawIdList")
+    @JsonProperty("raw_ids")
     private List<RawResponse>  rawResponse ;
 }

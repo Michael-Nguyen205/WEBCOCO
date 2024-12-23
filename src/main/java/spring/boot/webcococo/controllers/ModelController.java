@@ -25,12 +25,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("${api.prefix}/models")
 public class ModelController {
-
     private final ModelMapper modelMapper;
     private final ModelsServiceImpl modelService;
     private final EntityCascadeDeletionUtil deletionUtil;
     private final ModelsRepository modelsRepository;
-
 
     @PreAuthorize("@authorUtils.hasAuthor('VIEW','MODEL',null)")
     @GetMapping(value = "/{id}")
@@ -48,7 +46,6 @@ public class ModelController {
 
 
     @PreAuthorize("@authorUtils.hasAuthor('VIEW','MODEL',null)")
-
     @GetMapping(value = "")
     public ResponseEntity<List<ModelResponse>> getAllModels() {
         log.error("Đã vào đây models controller");
@@ -106,7 +103,6 @@ public class ModelController {
 
 
     @PreAuthorize("@authorUtils.hasAuthor('DELETE','MODEL',null)")
-
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteModel(@PathVariable Integer id) {
         log.error("đã vào trong deletemodels");

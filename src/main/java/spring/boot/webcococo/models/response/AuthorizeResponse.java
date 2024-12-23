@@ -9,8 +9,6 @@ import lombok.*;
 @Getter
 @Setter
 public class AuthorizeResponse {
-
-
-    @JsonProperty("Permisson")
+    @JsonProperty("permission")
     private PermissionResponse permissonResponse;
 }

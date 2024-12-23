@@ -31,6 +31,7 @@ public class AuthorUtils {
         }
 
         String username = userDetails.getUsername();
+        log.error("username:{}",username);
         if (username == null) {
             log.error("Username is null in UserDetails");
             throw new AppException(ErrorCodeEnum.UNAUTHORIZED, "Username không hợp lệ");
@@ -40,10 +41,13 @@ public class AuthorUtils {
             if (model == null && action == null) {
                 return false;
             } else if (model != null && action == null && rawId == null) {
+                log.error("111111111");
                 return permissionActionRawRepository.countActionModelRawAuthors(username, rawId, null, model) > 0;
             } else if (model != null && action != null && rawId == null) {
+                log.error("222222222222");
                 return permissionActionRawRepository.countActionModelRawAuthors(username, action, model) > 0;
             } else {
+                log.error("333333333333");
                 return permissionActionRawRepository.countActionModelRawAuthors(username, rawId, action, model) > 0;
             }
         } catch (DataAccessException e) {

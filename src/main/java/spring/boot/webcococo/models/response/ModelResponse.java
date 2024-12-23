@@ -17,16 +17,16 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
 public class ModelResponse {
-    @JsonProperty("model_id")
+    @JsonProperty("id")
     private Integer modelId;
 
-    @JsonProperty("model_name")
+    @JsonProperty("name")
     private String modelName;
 
-    @JsonProperty("model_description")
+    @JsonProperty("description")
     private String modelDescription;
 
-    @JsonProperty("Action")
+    @JsonProperty("actions")
     private List<ActionResponse> actionResponses;
 
 
