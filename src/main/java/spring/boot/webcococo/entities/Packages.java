@@ -23,4 +23,8 @@ public class Packages extends BaseEntity {
 
     @Column(name = "deposit_percent")
     private Integer depositPercent; // Thêm trường tiền cọc
+
+
+    @Column(name = "i18n_language_id")
+    private Integer i18nLanguageId;
 }

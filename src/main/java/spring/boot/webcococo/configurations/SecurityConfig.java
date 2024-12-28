@@ -42,7 +42,7 @@ public class SecurityConfig {
 
                 // Tìm người dùng qua email
                 var user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                        .orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND,"khong tim thay email nay"));
 
                 // Kiểm tra nếu username hoặc password là null
                 if (user.getEmail() == null || user.getPassword() == null) {

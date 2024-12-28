@@ -206,7 +206,7 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
                                  p.name AS p_name,\s
                                  p.description AS p_description,\s
                                  p.categories_id AS p_categories_id,\s
-                                 p.deposit AS p_deposit,\s
+                                 p.deposit_percent AS p_deposit_percent,\s
                                  ppi.image AS p_image,
                                  pf.id AS pf_id,\s
                                  pf.feature AS pf_name,\s

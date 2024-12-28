@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import spring.boot.webcococo.enums.ErrorCodeEnum;
+import spring.boot.webcococo.exceptions.AppException;
 import spring.boot.webcococo.utils.JwtTokenUtil;
 
 import java.io.IOException;
@@ -30,7 +32,6 @@ import java.util.List;
 public class JwtTokenFilter extends OncePerRequestFilter {
     @Value("${api.prefix}")
     private String apiPrefix;
-
     private final UserDetailsService userDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
 
@@ -64,13 +65,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }else{
+                    throw new AppException(ErrorCodeEnum.INVALID_TOKEN,"token khong hop le");
                 }
             }
 
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             log.error("Lỗi trong filter chain: {}", e.getMessage(), e);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // HTTP status code
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            // JSON response với mã lỗi chung
+            String errorResponse = "{"
+                    + "\"code\": \"UNAUTHORIZED\","
+                    + "\"message\": \"Invalid or expired token\""
+                    + "}";
+            response.getWriter().write(errorResponse);
         } finally {
             long duration = System.currentTimeMillis() - startTime;
             log.info("Request {} processed in {} ms", request.getRequestURI(), duration);

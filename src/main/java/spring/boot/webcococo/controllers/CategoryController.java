@@ -24,7 +24,7 @@ private final CategoriesServiceImpl categoriesService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> saveCategoryTree(@RequestBody CategoriesRequest request) {
+    public ResponseEntity<?> createCategoryTree(@RequestBody CategoriesRequest request) {
         try {
             log.error("da vao request la: {}", request);
             CategoriesResponse response = categoriesService.saveCategoryTree(request);
@@ -98,7 +98,7 @@ private final CategoriesServiceImpl categoriesService;
 
     @DeleteMapping  ("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> updateCategoryTree(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteCategoryTree(@PathVariable Integer id) {
         try {
            categoriesService.deleteCategoryTree(id);
             return ResponseEntity.ok(new ApiResponse(200, "Success", "xoa thanh ccoong", null));

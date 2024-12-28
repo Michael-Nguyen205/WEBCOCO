@@ -58,7 +58,7 @@ public class PackagepProjectionMapping {
             packagepProjectionMapping.setPackageDescription(rs.getString("p_description"));
             packagepProjectionMapping.setPackageCategoriesId(rs.getInt("p_categories_id"));
             packagepProjectionMapping.setPackageImage(rs.getString("p_image"));
-            packagepProjectionMapping.setPackageDepositPercent(rs.getInt("p_deposit"));
+            packagepProjectionMapping.setPackageDepositPercent(rs.getInt("p_deposit_percent"));
 
             // Mapping package feature fields
             packagepProjectionMapping.setPackageFeatureId(rs.getInt("pf_id"));

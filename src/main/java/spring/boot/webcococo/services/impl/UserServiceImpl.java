@@ -139,7 +139,6 @@ public class UserServiceImpl implements IUserService {
     public UserLoginResponse login(String email, String password, HttpServletRequest request) {
 
         try {
-
             if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
                 throw new IllegalArgumentException("Email or password cannot be null or empty");
             }

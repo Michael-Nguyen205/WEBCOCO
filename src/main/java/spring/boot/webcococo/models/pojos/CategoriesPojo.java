@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 public class CategoriesPojo {
     private Integer id; // ID của danh mục (có thể null nếu là danh mục mới)
     private String name; // Tên của danh mục
-    private Integer parentId; // ID của danh mục cha (null nếu là root)
+    private Integer parentId;
+    private Integer i18nLanguageId;
+    private String languageCode;// ID của danh mục cha (null nếu là root)
+    private Boolean isActive;
     private Integer level; // Danh sách các danh mục con
+
 }

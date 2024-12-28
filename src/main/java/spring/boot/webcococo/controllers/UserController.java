@@ -30,6 +30,9 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<UserRegisterResponse> createUser(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
+
+
+        log.error("đã vào register");
         if (!userRegisterRequest.getRetypePassword().equals(userRegisterRequest.getPassword())) {
             throw new AppException(ErrorCodeEnum.UNAUTHENTICATED, "Password nhập lại không khớp");
         }
@@ -57,6 +60,8 @@ public class UserController {
         } catch (AppException e) {
             // Xử lý ngoại lệ bằng cách ném lại để Spring Boot xử lý
             throw e;
+        } catch ( Exception e){
+            throw new AppException(ErrorCodeEnum.UNAUTHENTICATED,"tai khoan hoawc mat khau sai");
         }
 
     }
