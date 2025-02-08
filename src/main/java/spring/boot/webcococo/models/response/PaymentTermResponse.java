@@ -15,12 +15,12 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 
 public class PaymentTermResponse {
 
 
-    private String name;
+//    private String name;
 
     @JsonProperty("packages_id")
     private Integer packagesId;
@@ -30,6 +30,8 @@ public class PaymentTermResponse {
 
     private BigDecimal price;
 
+    @JsonProperty("deposit_percent")
+    private Integer depositPercent;
 
 
     @JsonProperty("payment_condition_on_budget")
@@ -48,8 +50,8 @@ public class PaymentTermResponse {
     public static PaymentTermResponse toPayMentTermResponse(PaymentTerms paymentTerms, Set<PaymentConditionOnBudgetResponse> paymentConditionOnBudgetResponseList, Set<PaymentConditionOnMonthlyResponse> paymentConditionOnMonthlyResponses){
 
             PaymentTermResponse response = new PaymentTermResponse();
-            response.setName(paymentTerms.getName());
-            response.setPrice(paymentTerms.getPrice());
+//            response.setName(paymentTerms.getName());
+
             response.setPaymentConditionOnBudgetResponses(paymentConditionOnBudgetResponseList);
             response.setPaymentConditionOnMonthlyResponses(paymentConditionOnMonthlyResponses);
             return response;

@@ -31,7 +31,7 @@ public class PackagesFeatureResponse {
         for (PackagesFeature packagesFeature : packagesFeatureList ){
             PackagesFeatureResponse productFeatureResponse = PackagesFeatureResponse.builder()
                     .id(packagesFeature.getId())
-                    .feature(packagesFeature.getFeature())
+//                    .feature(packagesFeature.getFeature())
                     .packageId(packagesFeature.getPackageId() )
                     .build();
             packagesFeatureResponses.add(productFeatureResponse);

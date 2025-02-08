@@ -10,17 +10,17 @@ import java.util.Set;
 public interface IPackagesService {
 
 
-    PackagesResponse createPackage(PackagesRequest packagesRequest , PaymentTermRequest paymentTermRequest );
+    PackagesResponse createPackage(PackagesRequest packagesRequest , PaymentTermRequest paymentTermRequest ,Integer languageId);
 
 
-    PackagesResponse updatePackage(Integer id ,PackagesRequest packagesRequest , PaymentTermRequest paymentTermRequest );
+    PackagesResponse updatePackage(Integer id ,PackagesRequest packagesRequest , PaymentTermRequest paymentTermRequest , Integer languageId);
     void deletePackage(Integer id );
 
-    PackagesResponse getPackage(Integer id );
+    PackagesResponse getPackage(Integer id  , String languageCode);
 
 
 
-    Set<PackagesResponse> getAllPackage(Integer categorieId) throws SQLException;
+    Set<PackagesResponse> getAllPackage(Integer categorieId ,String languageCode) throws SQLException;
 
 
 }

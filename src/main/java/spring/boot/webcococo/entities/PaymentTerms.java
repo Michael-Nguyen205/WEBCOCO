@@ -14,8 +14,7 @@ public class PaymentTerms extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name")
-    private String name;
+
 
     @Column(name = "package_id")
     private Integer packagesId;
@@ -26,8 +25,13 @@ public class PaymentTerms extends BaseEntity {
 //    @Column(name = "payment_method_id")
 //    private Integer paymentMethodId;
 
-    @Column(name = "price")
-    private BigDecimal price;
+    @Column(name = "price_translation_key_id")
+    private Integer priceTranslationKeyId;
+
+
+    @Column(name = "deposit_percent_translation_key_id")
+    private Integer depositPercentTranslationKeyId; // Thêm trường tiền cọc
+
 
     @Column(name = "start_at")
     private LocalDate startAt;

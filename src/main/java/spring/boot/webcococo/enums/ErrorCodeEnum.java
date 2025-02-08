@@ -27,6 +27,7 @@ public enum ErrorCodeEnum {
     NULL_POINTER(1005, "error.null_pointer", HttpStatus.BAD_REQUEST),
     INVALID_OPERATION(1008,"error.invalid_operation", HttpStatus.BAD_REQUEST),
     CANNOT_SEND_EMAIL(1009,"error.canot_send_email", HttpStatus.BAD_REQUEST),
+    FIELD_NOT_FOUND(1009,"error.field_not_found", HttpStatus.BAD_REQUEST),
     JSON_MAP_ERRO(1000, "error.json_map_error", HttpStatus.BAD_REQUEST);
 
     private final int code;

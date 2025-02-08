@@ -10,4 +10,5 @@ public interface IProductPackageImagesService {
 
     List<ProductPackageImages> createPackageImages(     Integer packageId,
                                                        List<MultipartFile> files  ) throws IOException;
+
 }

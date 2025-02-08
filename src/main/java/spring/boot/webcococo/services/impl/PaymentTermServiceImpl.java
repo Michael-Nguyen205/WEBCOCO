@@ -14,6 +14,7 @@ import spring.boot.webcococo.repositories.*;
 import spring.boot.webcococo.services.IPaymentTermService;
 import spring.boot.webcococo.utils.EntityCascadeDeletionUtil;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Integer, PaymentTermRepository> implements IPaymentTermService {
 
 
-    private final PaymentMethodPaymentTermrRepository paymentMethodPaymentTermrRepository;
+//    private final PaymentMethodPaymentTermrRepository paymentMethodPaymentTermrRepository;
     private final PaymentConditionOnMonthlyRepository paymentConditionOnMonthlyRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final PaymentConditionOnBudgetRepository paymentConditionOnBudgetRepository;
@@ -37,10 +38,12 @@ public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Intege
 
     private  final BankGateWayRepository bankGateWayRepository;
 
+    private  final  TranslationServiceImpl translationService;
 
-    public PaymentTermServiceImpl(PaymentTermRepository paymentTermRepository, PaymentMethodPaymentTermrRepository paymentMethodPaymentTermrRepository, PaymentConditionOnMonthlyRepository paymentConditionOnMonthlyRepository, PaymentMethodRepository paymentMethodRepository, PaymentConditionOnBudgetRepository paymentConditionOnBudgetRepository, PackagesRepository packagesRepository, ProductRepository productRepository, BankGatewayDetailRepository bankGatewayDetailRepository, EntityCascadeDeletionUtil deletionUtil, PaymentTermRepository paymentTermRepository1, BankGateWayRepository bankGateWayRepository) {
+
+    public PaymentTermServiceImpl(PaymentTermRepository paymentTermRepository, PaymentConditionOnMonthlyRepository paymentConditionOnMonthlyRepository, PaymentMethodRepository paymentMethodRepository, PaymentConditionOnBudgetRepository paymentConditionOnBudgetRepository, PackagesRepository packagesRepository, ProductRepository productRepository, BankGatewayDetailRepository bankGatewayDetailRepository, EntityCascadeDeletionUtil deletionUtil, PaymentTermRepository paymentTermRepository1, BankGateWayRepository bankGateWayRepository, TranslationServiceImpl translationService) {
         super(paymentTermRepository); // Truyền repository vào lớp cha
-        this.paymentMethodPaymentTermrRepository = paymentMethodPaymentTermrRepository;
+//        this.paymentMethodPaymentTermrRepository = paymentMethodPaymentTermrRepository;
         this.paymentConditionOnMonthlyRepository = paymentConditionOnMonthlyRepository;
         this.paymentMethodRepository = paymentMethodRepository;
         this.paymentConditionOnBudgetRepository = paymentConditionOnBudgetRepository;
@@ -50,67 +53,8 @@ public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Intege
         this.deletionUtil = deletionUtil;
         this.paymentTermRepository = paymentTermRepository1;
         this.bankGateWayRepository = bankGateWayRepository;
+        this.translationService = translationService;
     }
-
-
-//    @Transactional
-//    protected Set<PaymentMethodResponse> createPaymentMethodResponse(Set<Integer> paymentMethodIdList, Integer paymentTermId) {
-//        log.error("đã vào createPaymentMethodResponse");
-//        try {
-//
-//            List<PaymentMethod> paymentMethodList = new ArrayList<>();
-//            List<PaymentMethodPaymentTerms> paymentMethodPaymentTermsList = new ArrayList<>();
-//
-//            for (Integer paymentMethodId : paymentMethodIdList) {
-//
-//                log.error("paymentMethodId:{}", paymentMethodId);
-//                log.error("paymentTermId:{}", paymentTermId);
-//
-//
-//                PaymentMethodPaymentTerms paymentMethodPaymentTerms = new PaymentMethodPaymentTerms();
-//
-//                PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-//                paymentMethodPaymentTerms.setPaymentMethodId(paymentMethodId);
-//                paymentMethodPaymentTerms.setPaymentTermsId(paymentTermId);
-//                paymentMethodPaymentTermsList.add(paymentMethodPaymentTerms);
-//                paymentMethodList.add(paymentMethod);
-//            }
-//            paymentMethodPaymentTermrRepository.saveAll(paymentMethodPaymentTermsList);
-//
-//
-//            // Sử dụng Builder nếu cần
-//            Set<PaymentMethodResponse> paymentMethodResponses = new HashSet<>();
-//
-//            for (PaymentMethod paymentMethod : paymentMethodList) {
-//                List<BankGatewayDetail> bankGatewayDetails = bankGatewayDetailRepository.findAllByPaymentMethodId(paymentMethod.getId()).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-//
-//
-//
-//                PaymentMethodResponse paymentMethodResponse = PaymentMethodResponse.toPaymentMethodResponse(bankGatewayDetails,paymentMethod ,bankGateWayTypeRepository);
-//                paymentMethodResponses.add(paymentMethodResponse);
-//            }
-//            // Thiết lập thời gian tạo và cập nhật
-//
-//
-//            return paymentMethodResponses;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw e;
-//        }
-//    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -199,34 +143,36 @@ public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Intege
 
 
 
-//    @Transactional
-//    public PaymentTermResponse toPaymentTermResponse(PaymentTerms paymentTerms, List<PaymentConditionOnBudgetResponse> paymentConditionOnBudgetResponseList, List<PaymentConditionOnMonthlyResponse> paymentConditionOnMonthlyResponses, List<PaymentMethodResponse> paymentMethodResponses) {
-//        PaymentTermResponse response = new PaymentTermResponse();
-//        response.setName(paymentTerms.getName());
-//        response.setPrice(paymentTerms.getPrice());
-////        response.setPackagesId();
-////        response.setProductId();
-//
-//        log.error("paymentConditionOnMonthlyResponses", paymentConditionOnMonthlyResponses);
-//        response.setPaymentConditionOnBudgetResponses(paymentConditionOnBudgetResponseList);
-//        response.setPaymentConditionOnMonthlyResponses(paymentConditionOnMonthlyResponses);
-//        response.setPaymentMethodResponses(paymentMethodResponses);
-//        return response;
-//    }
 
 
     @Transactional
     @Override
-    public PaymentTermResponse createPaymentTerm(PaymentTermRequest request, Integer packageId, Integer productId) {
-        log.error("payment_condition_on_monthly ", request.getPaymentConditionOnMonthlyRequestList());
-
+    public PaymentTermResponse createPaymentTerm(PaymentTermRequest request, Integer packageId, Integer productId, Integer languageId) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
 
         PaymentTerms paymentTerms = new PaymentTerms();
-        paymentTerms.setName(request.getName());
 
+        save(paymentTerms);
         try {
             if (request.getPrice() != null) {
-                paymentTerms.setPrice(request.getPrice());
+                Integer priceTranslationKeyId = translationService.createTranslationForNewEntity(paymentTerms, request, languageId, "price");
+                if (priceTranslationKeyId != null) {
+                    paymentTerms.setPriceTranslationKeyId(priceTranslationKeyId);
+                }else {
+                    throw new AppException(ErrorCodeEnum.NULL_POINTER);
+                }
+            }
+
+            if (request.getDepositPercent() != null) {
+                log.error("request.getDepositPercent():{}",request.getDepositPercent());
+                Integer depositPercentTranslationKeyId = translationService.createTranslationForNewEntity(paymentTerms, request, languageId, "depositPercent");
+                if (depositPercentTranslationKeyId != null) {
+                    paymentTerms.setDepositPercentTranslationKeyId(depositPercentTranslationKeyId);
+                }else {
+                    throw new AppException(ErrorCodeEnum.NULL_POINTER);
+                }
             }
 
 
@@ -241,29 +187,43 @@ public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Intege
                 paymentTerms.setStartAt(request.getStartAt());
                 paymentTerms.setEndAt(request.getEndAt());
             }
+
+
+            if (request.getStartAt() != null) {
+                paymentTerms.setStartAt(request.getStartAt());
+            }
+            if (request.getEndAt() != null) {
+                paymentTerms.setEndAt(request.getEndAt());
+            }
+
             save(paymentTerms);
         } catch (Exception e) {
+            log.error("Error while creating payment term", e);
             throw e;
         }
 
-
         Set<PaymentConditionOnBudgetResponse> paymentConditionOnBudgetResponseList = new HashSet<>();
         Set<PaymentConditionOnMonthlyResponse> paymentConditionOnMonthlyResponses = new HashSet<>();
+
         if (request.getPaymentConditionOnBudgetRequestList() != null) {
             paymentConditionOnBudgetResponseList = createPaymentConditionOnBudget(request.getPaymentConditionOnBudgetRequestList(), paymentTerms.getId());
         }
 
         if (request.getPaymentConditionOnMonthlyRequestList() != null) {
-
             paymentConditionOnMonthlyResponses = createPaymentConditionOnMonthly(request.getPaymentConditionOnMonthlyRequestList(), paymentTerms.getId());
         }
 
-
-
-//        return toPaymentTermResponse(paymentTerms, paymentConditionOnBudgetResponseList, paymentConditionOnMonthlyResponses, paymentMethodResponses);
         return PaymentTermResponse.toPayMentTermResponse(paymentTerms, paymentConditionOnBudgetResponseList, paymentConditionOnMonthlyResponses);
     }
 
+
+
+
+
+    @Override
+    public PaymentTermResponse updatePaymentTerm(PaymentTermRequest request, Integer packdageId, Integer productId) {
+        return null;
+    }
 
 
     @Override
@@ -306,59 +266,58 @@ public class PaymentTermServiceImpl extends BaseServiceImpl<PaymentTerms, Intege
 
 
 
-    @Transactional
-    @Override
-    public PaymentTermResponse updatePaymentTerm(PaymentTermRequest request, Integer packageId, Integer productId) {
-        log.error("payment_condition_on_monthly ", request.getPaymentConditionOnMonthlyRequestList());
-
-
-        PaymentTerms paymentTerms = paymentTermRepository.findByPackagesId(packageId).orElseThrow(()->new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-        paymentTerms.setName(request.getName());
-
-
-        try {
-            if (request.getPrice() != null) {
-                paymentTerms.setPrice(request.getPrice());
-            }
-
-
-            if (packageId != null && productId == null) {
-                paymentTerms.setPackagesId(packageId);
-            } else if (productId == null && packageId != null) {
-                paymentTerms.setProductId(productId);
-            }
-
-
-            if (request.getStartAt() != null) {
-                paymentTerms.setStartAt(request.getStartAt());
-                paymentTerms.setEndAt(request.getEndAt());
-            }
-            save(paymentTerms);
-        } catch (Exception e) {
-            throw e;
-        }
-
-
-        Set<PaymentConditionOnBudgetResponse> paymentConditionOnBudgetResponses = new HashSet<>();
-        Set<PaymentConditionOnMonthlyResponse> paymentConditionOnMonthlyResponses = new HashSet<>();
-
-
-        if (request.getPaymentConditionOnBudgetRequestList() != null) {
-//            paymentConditionOnBudgetResponses = createPaymentConditionOnBudget(request.getPaymentConditionOnBudgetRequestList(), paymentTerms.getId());
-        }
-
-        if (request.getPaymentConditionOnMonthlyRequestList() != null) {
-            paymentConditionOnMonthlyResponses = updatePaymentConditionOnMonthly(request.getPaymentConditionOnMonthlyRequestList(), paymentTerms.getId());
-        }
-
-
-
-//        return toPaymentTermResponse(paymentTerms, paymentConditionOnBudgetResponseList, paymentConditionOnMonthlyResponses, paymentMethodResponses);
-        return PaymentTermResponse.toPayMentTermResponse(paymentTerms, paymentConditionOnBudgetResponses, paymentConditionOnMonthlyResponses);
-    }
-
-
-
+//    @Transactional
+//    @Override
+//    public PaymentTermResponse updatePaymentTerm(PaymentTermRequest request, Integer packageId, Integer productId) {
+//        log.error("payment_condition_on_monthly ", request.getPaymentConditionOnMonthlyRequestList());
+//
+//
+//        PaymentTerms paymentTerms = paymentTermRepository.findByPackagesId(packageId).orElseThrow(()->new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
+//
+//
+//        try {
+//            if (request.getPrice() != null) {
+//                paymentTerms.setPrice(request.getPrice());
+//            }
+//
+//
+//            if (packageId != null && productId == null) {
+//                paymentTerms.setPackagesId(packageId);
+//            } else if (productId == null && packageId != null) {
+//                paymentTerms.setProductId(productId);
+//            }
+//
+//
+//            if (request.getStartAt() != null) {
+//                paymentTerms.setStartAt(request.getStartAt());
+//                paymentTerms.setEndAt(request.getEndAt());
+//            }
+//            save(paymentTerms);
+//        } catch (Exception e) {
+//            throw e;
+//        }
+//
+//
+//        Set<PaymentConditionOnBudgetResponse> paymentConditionOnBudgetResponses = new HashSet<>();
+//        Set<PaymentConditionOnMonthlyResponse> paymentConditionOnMonthlyResponses = new HashSet<>();
+//
+//
+//        if (request.getPaymentConditionOnBudgetRequestList() != null) {
+////            paymentConditionOnBudgetResponses = createPaymentConditionOnBudget(request.getPaymentConditionOnBudgetRequestList(), paymentTerms.getId());
+//        }
+//
+//        if (request.getPaymentConditionOnMonthlyRequestList() != null) {
+//            paymentConditionOnMonthlyResponses = updatePaymentConditionOnMonthly(request.getPaymentConditionOnMonthlyRequestList(), paymentTerms.getId());
+//        }
+//
+//
+//
+////        return toPaymentTermResponse(paymentTerms, paymentConditionOnBudgetResponseList, paymentConditionOnMonthlyResponses, paymentMethodResponses);
+//        return PaymentTermResponse.toPayMentTermResponse(paymentTerms, paymentConditionOnBudgetResponses, paymentConditionOnMonthlyResponses);
+//    }
+//
+//
+//
 
 
 

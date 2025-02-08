@@ -29,13 +29,13 @@ public class OrderController {
 
 
     @PostMapping
-    public ApiResponse<?> createOrder(@RequestBody @Valid OrderRequest orderRequest, HttpServletRequest request) {
+    public ApiResponse<?> createOrder(@RequestBody @Valid OrderRequest orderRequest, HttpServletRequest request , @RequestHeader("Accept-Language") String acceptLanguage) {
         try {
 
             log.error("đa vao controller");
 //            PackagesResponse response = packagesService.createPackage(packagesRequest , packagesRequest.getPaymentTermRequest());
             String ipAdress = ipAddressUtil.getIpAddress(request);
-            OrderResponse orderResponse = orderService.createOrder(orderRequest, ipAdress);
+            OrderResponse orderResponse = orderService.createOrder(orderRequest, ipAdress , acceptLanguage);
             return ApiResponse.builder().code(200).detailMess("rgr").result(orderResponse).build();
 
         } catch (Exception e) {
@@ -43,6 +43,7 @@ public class OrderController {
             throw e;
         }
     }
+
 
 
 
@@ -62,25 +63,19 @@ public class OrderController {
 
 
 
-    @PostMapping(value = "/pay/{orderId}/{bankGateWayDetailId}")
-    public ApiResponse<?> payOrder(@PathVariable Integer orderId,@PathVariable Integer bankGateWayDetailId, HttpServletRequest request) {
-        try {
-            String ipAdress = ipAddressUtil.getIpAddress( request);
-            log.error("đa vao controller");
-            log.error("bankGateWayDetailId:{}",bankGateWayDetailId);
-            PaymentResponse paymentResponse = orderService.payOrder (orderId,ipAdress ,bankGateWayDetailId);
-            return ApiResponse.builder().code(200).detailMess("rgr").result(paymentResponse).build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-
-
-
-
-
+//    @PostMapping(value = "/pay/{orderId}/{bankGateWayDetailId}")
+//    public ApiResponse<?> payOrder(@PathVariable Integer orderId,@PathVariable Integer bankGateWayDetailId, HttpServletRequest request) {
+//        try {
+//            String ipAdress = ipAddressUtil.getIpAddress( request);
+//            log.error("đa vao controller");
+//            log.error("bankGateWayDetailId:{}",bankGateWayDetailId);
+//            PaymentResponse paymentResponse = orderService.paymentOnlineOrder (orderId,ipAdress ,bankGateWayDetailId);
+//            return ApiResponse.builder().code(200).detailMess("rgr").result(paymentResponse).build();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw e;
+//        }
+//    }
 
 
 }

@@ -8,7 +8,7 @@ import spring.boot.webcococo.models.response.PaymentTermResponse;
 public interface IPaymentTermService {
 
 
-    PaymentTermResponse createPaymentTerm(PaymentTermRequest request, Integer packdageId,Integer productId);
+    PaymentTermResponse createPaymentTerm(PaymentTermRequest request, Integer packdageId,Integer productId,Integer languageId);
 
     PaymentTermResponse updatePaymentTerm(PaymentTermRequest request, Integer packdageId,Integer productId);
 

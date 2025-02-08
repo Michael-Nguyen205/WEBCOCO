@@ -57,15 +57,6 @@ public class BankGateWayDetailController {
     }
 
 
-//    @PutMapping("/{id}")
-//    @ResponseStatus(HttpStatus.OK)
-//    public ApiResponse updateBankGateWayType(@RequestBody @Valid CreateActionRequest request, @PathVariable Integer id) {
-//        BankGateWayType bankGateWayTypeExisting = bankGateWayTypeRepository.findById(id)
-//                .orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND, "Không tìm thấy action với id: " + id));
-//        bankGateWayTypeExisting.setName(request.getName());
-//        BankGateWayType updatedEntity = bankGateWayTypeService.update(bankGateWayTypeExisting);
-//        return new ApiResponse(null, "Action updated successfully", null, updatedEntity);
-//    }
 
 
     @DeleteMapping("/{id}")

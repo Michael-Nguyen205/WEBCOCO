@@ -46,8 +46,8 @@ public class PackagesResponse {
 
         return PackagesResponse.builder()
                 .id(packages.getId())
-                .name(packages.getName())
-                .description(packages.getDescription())
+//                .name(packages.getName())
+//                .description(packages.getDescription())
                 .categoriesId(packages.getCategoriesId())
 //                .packageImagesResponses(PackageImagesResponse.   )
                 .packagesFeatureResponses(PackagesFeatureResponse.toPackagesResponseList(packagesFeatureList))

@@ -9,7 +9,6 @@ import java.util.List;
 public class PackagesRequest  {
 
 
-
     private String name;
 
     private String description;
@@ -23,7 +22,7 @@ public class PackagesRequest  {
     @JsonProperty("payment_term")
     private PaymentTermRequest paymentTermRequest;
 
-    @JsonProperty("deposit_Percent")
+    @JsonProperty("deposit_percent")
     private Integer depositPercent;
 
 

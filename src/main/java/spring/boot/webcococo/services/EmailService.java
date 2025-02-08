@@ -22,22 +22,17 @@ import java.util.List;
 public class EmailService {
    private final EmailClient emailClient;
 
-
-
     @Value("jijiji")
-
     @NonFinal
     String apiKey;
-
     public EmailResponse sendPayEmail( Order order ) {
-
 
         // Tạo đối tượng Sender
         EmailRequestDTO.SenderDTO sender = new EmailRequestDTO.SenderDTO();
         sender.setName("Devteria DotCom");
         sender.setEmail("devteriadotcom@gmail.com");
 
-        // Tạo đối tượng người gửi
+        // Tạo đối tượng người nhận
         EmailRequestDTO.RecipientDTO recipientDTO = new EmailRequestDTO.RecipientDTO();
         recipientDTO.setName(order.getUserId());
         recipientDTO.setEmail(order.getEmail());

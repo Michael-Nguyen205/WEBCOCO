@@ -12,10 +12,12 @@ public interface IPackageRedis {
     void clearRedisCache();//clear cache
     Set<PackagesResponse> getPackagesFromRedis(
             String keyword,
-            Integer categoryId) throws JsonProcessingException;
+            Integer categoryId,
+            String languageCode) throws JsonProcessingException;
     void savePackagesToRedis(Set<PackagesResponse> productResponses,
                                 String keyword,
                              Integer categoryId
+                             ,String languageCode
                                 ) throws JsonProcessingException;
 
 }

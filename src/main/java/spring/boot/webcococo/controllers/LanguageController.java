@@ -1,5 +1,6 @@
 package spring.boot.webcococo.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -34,9 +35,12 @@ public class LanguageController {
 
     @GetMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> getBankGateWay(@PathVariable Integer id) {
+    public ResponseEntity<?> getLanguageById(@PathVariable Integer id , HttpServletRequest request) {
         try {
+            String ipAddress = request.getRemoteAddr();
             log.error("Đã vào đây actions controller");
+            log.error("ipAddress:{}",ipAddress);
+
             I18Language I18Language = i18nLanguageService.findById(id)
                     .orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND, "Không tìm thấy action với id: " + id));
             return ResponseEntity.ok(I18Language);
@@ -51,7 +55,7 @@ public class LanguageController {
 
     @GetMapping(value = "")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> getBankGateWay() {
+    public ResponseEntity<?> getAllLanguage() {
         try {
             log.error("Đã vào đây actions controller");
             List<I18Language> i18Languages = i18nLanguageService.findAll();
@@ -64,7 +68,7 @@ public class LanguageController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> createBankGateWay(@RequestBody I18LanguageRequest request ) {
+    public ResponseEntity<?> createLanguage(@RequestBody I18LanguageRequest request  ) {
         try {
             I18Language i18Language = new I18Language();
             i18Language.setCode(request.getCode());
@@ -85,7 +89,7 @@ public class LanguageController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> updateBankGateWay(@RequestBody @Valid I18LanguageRequest request, @PathVariable Integer id) {
+    public ResponseEntity<?> updateLanguage(@RequestBody @Valid I18LanguageRequest request, @PathVariable Integer id) {
         try {
             I18Language i18Language = i18nLanguageService.findById(id)
                     .orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND, "Không tìm thấy I18Language với id: " + id));
@@ -108,7 +112,7 @@ public class LanguageController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> deleteBankGateWay(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteLanguage(@PathVariable Integer id) {
         try {
             log.error("Đã vào trong delete actions");
             i18nLanguageService.deleteById(id);

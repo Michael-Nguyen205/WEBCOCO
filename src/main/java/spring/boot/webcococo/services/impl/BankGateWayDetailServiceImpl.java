@@ -37,7 +37,6 @@ public class BankGateWayDetailServiceImpl extends BaseServiceImpl<BankGatewayDet
     @Override
     public BankGatewayDetailResponse getBankgateWayDetail(Integer id) {
 
-
         BankGatewayDetail bankGatewayDetail = bankGatewayDetailRepository.findById(id).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
         BankGateWay bankGateWay = bankGateWayRepository.findById(bankGatewayDetail.getBankGatewayId()).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
 
@@ -59,6 +58,13 @@ public class BankGateWayDetailServiceImpl extends BaseServiceImpl<BankGatewayDet
                 .build();
         return response;
     }
+
+
+
+
+
+
+
 
 
     @Override

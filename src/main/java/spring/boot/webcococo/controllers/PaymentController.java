@@ -3,17 +3,19 @@ package spring.boot.webcococo.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 import spring.boot.webcococo.entities.Order;
 import spring.boot.webcococo.entities.PaymentTransaction;
 import spring.boot.webcococo.enums.ErrorCodeEnum;
 import spring.boot.webcococo.exceptions.AppException;
+import spring.boot.webcococo.models.response.ApiResponse;
+import spring.boot.webcococo.models.response.PaymentResponse;
 import spring.boot.webcococo.services.PaymentService;
 import spring.boot.webcococo.services.impl.OrderServiceImpl;
+import spring.boot.webcococo.services.impl.PaymentServiceImpl;
 import spring.boot.webcococo.services.impl.PaymentTransactionServiceImpl;
+import spring.boot.webcococo.utils.IpAddressUtil;
 
 import java.math.BigDecimal;
 
@@ -22,9 +24,9 @@ import java.math.BigDecimal;
 @RequestMapping("${api.prefix}/payment")
 @RequiredArgsConstructor
 public class PaymentController {
-    private final PaymentService paymentService;
     private final OrderServiceImpl orderService;
-
+    private final IpAddressUtil ipAddressUtil;
+private  final PaymentServiceImpl paymentService;
     private final PaymentTransactionServiceImpl paymentTransactionService;
 
 //    @GetMapping("/vn-pay")
@@ -93,6 +95,32 @@ public class PaymentController {
             return new RedirectView("https://example.com/failure?error=unknown_error");
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    @PostMapping(value = "/{orderId}")
+    public ApiResponse<?> payOrder(@PathVariable Integer orderId, HttpServletRequest request) {
+        try {
+            String ipAdress = ipAddressUtil.getIpAddress( request);
+            log.error("đa vao controller");
+            PaymentResponse paymentResponse = paymentService.paymentOnlineOrder(orderId,ipAdress );
+            return ApiResponse.builder().code(200).detailMess("rgr").result(paymentResponse).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+
 
 
 

@@ -26,24 +26,25 @@ public class PackageRedisImpl implements IPackageRedis {
     private boolean useRedisCache;
 
     private String getKeyFrom(String keyword,
-                              Integer categoryId
+                              Integer categoryId,
+                              String languageCode
                               ) {
 
 
         String key = String.format("all_products:%s:%d",
-                keyword, categoryId);
+                keyword, categoryId,languageCode);
         return key;
     }
 
 
 
     @Override
-    public Set<PackagesResponse> getPackagesFromRedis(String keyword, Integer categoryId) throws JsonProcessingException {
+    public Set<PackagesResponse> getPackagesFromRedis(String keyword, Integer categoryId ,String languageCode) throws JsonProcessingException {
         if (!useRedisCache) {
             return Collections.emptySet();  // Trả về một Set rỗng thay vì null nếu không dùng Redis
         }
 
-        String key = this.getKeyFrom(keyword, categoryId);
+        String key = this.getKeyFrom(keyword, categoryId ,languageCode);
         String json = (String) redisTemplate.opsForValue().get(key);
 
         System.out.println("Redis key: " + key);
@@ -99,13 +100,17 @@ public class PackageRedisImpl implements IPackageRedis {
 
 
 
+
+
+
     @Override
     //save to Redis
     public void savePackagesToRedis(Set<PackagesResponse> productResponses,
                                 String keyword,
                                 Integer categoryId
+                                    ,String languageCode
                                 ) throws JsonProcessingException {
-        String key = this.getKeyFrom(keyword, categoryId);
+        String key = this.getKeyFrom(keyword, categoryId,languageCode);
         String json = redisObjectMapper.writeValueAsString(productResponses);
         redisTemplate.opsForValue().set(key, json);
     }

@@ -13,6 +13,8 @@ spring:
       #      username: default
       use-redis-cache: true
 
+
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3309/WebCoCo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     driver-class-name: com.mysql.cj.jdbc.Driver

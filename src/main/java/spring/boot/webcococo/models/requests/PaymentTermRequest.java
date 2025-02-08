@@ -25,6 +25,10 @@ public class PaymentTermRequest {
 
     private BigDecimal price;
 
+
+    @JsonProperty("deposit_percent")
+    private Integer depositPercent;
+
     @JsonProperty("start_at")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate startAt;

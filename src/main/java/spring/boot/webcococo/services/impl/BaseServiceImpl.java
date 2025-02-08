@@ -40,7 +40,6 @@ public class BaseServiceImpl<T, ID extends Serializable, R extends JpaRepository
     @Override
     public List<T> findAll() {
         try {
-
             return repository.findAll();
         } catch (Exception e) {
             log.error("Error fetching all entities: {}", e.getMessage(), e);
@@ -54,14 +53,19 @@ public class BaseServiceImpl<T, ID extends Serializable, R extends JpaRepository
     public T save(T entity) {
         try {
             return repository.save(entity);
-        } catch (DuplicateKeyException e) {
-            log.error("Duplicate key error: {}", e.getMessage(), e);
-            throw new AppException(ErrorCodeEnum.DUPLICATE_DATA, "Entity already exists");
         } catch (DataIntegrityViolationException e) {
-            log.error("Duplicate key error: {}", e.getMessage(), e);
+            // Ghi log rõ ràng thông tin entity gặp lỗi
+            log.error("Duplicate key error: Entity type: {}, Entity: {}, Message: {}",
+                    entity.getClass().getSimpleName(),
+                    entity.toString(),
+                    e.getMessage(), e);
             throw new AppException(ErrorCodeEnum.DUPLICATE_DATA, "Entity already exists");
         } catch (Exception e) {
-            log.error("Error saving entity: {}", e.getMessage(), e);
+            // Ghi log khi có lỗi khác và thêm thông tin entity
+            log.error("Error saving entity: Entity type: {}, Entity: {}, Message: {}",
+                    entity.getClass().getSimpleName(),
+                    entity.toString(),
+                    e.getMessage(), e);
             throw new AppException(ErrorCodeEnum.INVALID_KEY, "Internal server error");
         }
     }

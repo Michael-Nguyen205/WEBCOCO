@@ -29,6 +29,7 @@ public class PackagepProjectionMapping {
     private Integer paymentTermsId;
     private String paymentTermsName;
     private BigDecimal paymentTermsPrice;
+    private Integer paymentTermsDepositePercent;
     // Payment Condition Budget fields
     private Integer paymentConditionBudgeId;
     private BigDecimal paymentConditionBudgetMin;
@@ -58,7 +59,6 @@ public class PackagepProjectionMapping {
             packagepProjectionMapping.setPackageDescription(rs.getString("p_description"));
             packagepProjectionMapping.setPackageCategoriesId(rs.getInt("p_categories_id"));
             packagepProjectionMapping.setPackageImage(rs.getString("p_image"));
-            packagepProjectionMapping.setPackageDepositPercent(rs.getInt("p_deposit_percent"));
 
             // Mapping package feature fields
             packagepProjectionMapping.setPackageFeatureId(rs.getInt("pf_id"));
@@ -66,8 +66,8 @@ public class PackagepProjectionMapping {
 
             // Mapping payment terms fields
             packagepProjectionMapping.setPaymentTermsId(rs.getInt("pt_id"));
-            packagepProjectionMapping.setPaymentTermsName(rs.getString("pt_name"));
             packagepProjectionMapping.setPaymentTermsPrice(rs.getBigDecimal("pt_price"));
+            packagepProjectionMapping.setPackageDepositPercent(rs.getInt("pt_deposit_percent"));
 
             // Mapping payment condition on budget fields
             packagepProjectionMapping.setPaymentConditionBudgeId(rs.getInt("pcb_id"));

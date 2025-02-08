@@ -4,10 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import spring.boot.webcococo.entities.Categories;
-import spring.boot.webcococo.entities.Packages;
-import spring.boot.webcococo.entities.PackagesFeature;
-import spring.boot.webcococo.entities.PaymentTerms;
+import spring.boot.webcococo.entities.*;
 import spring.boot.webcococo.enums.ErrorCodeEnum;
 import spring.boot.webcococo.exceptions.AppException;
 import spring.boot.webcococo.models.mapping.PackagepProjectionMapping;
@@ -15,10 +12,7 @@ import spring.boot.webcococo.models.requests.PackageFeatureRequest;
 import spring.boot.webcococo.models.requests.PackagesRequest;
 import spring.boot.webcococo.models.requests.PaymentTermRequest;
 import spring.boot.webcococo.models.response.*;
-import spring.boot.webcococo.repositories.CategoryRepository;
-import spring.boot.webcococo.repositories.PackagesFeatureRepository;
-import spring.boot.webcococo.repositories.PackagesRepository;
-import spring.boot.webcococo.repositories.PaymentTermRepository;
+import spring.boot.webcococo.repositories.*;
 import spring.boot.webcococo.services.IPackagesService;
 import spring.boot.webcococo.utils.EntityCascadeDeletionUtil;
 
@@ -47,38 +41,27 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
     private final EntityCascadeDeletionUtil deletionUtil;
 
     private final JdbcTemplate jdbcTemplate;
+
+    private final TranslationServiceImpl translationService;
+
+
+    private  final  TranslationKeyServiceImpl translationKeyService;
+
+
+    private  final  TranslationKeyRepository translationKeyRepository;
+
+
+    private  final TranslationRepository translationRepository;
     AtomicInteger loopCounter = new AtomicInteger(0);
     AtomicInteger loopCreateOpp = new AtomicInteger(0);
     AtomicInteger loopCreateOppPackageFeature = new AtomicInteger(0);
     AtomicInteger loopCreateOppPaymentConditionOnMonthly = new AtomicInteger(0);
     AtomicInteger loopCreateOppPaymentMethods = new AtomicInteger(0);
     AtomicInteger loopCreateOppBankGateway = new AtomicInteger(0);
-    //    private Set<PackagesFeatureResponse> mapPackagesFeatures(Set<PackagepProjectionMapping> packagepProjectionMappings) throws SQLException {
-//
-//        // Sử dụng Stream để xử lý dữ liệu thay vì TreeSet
-//        return packagepProjectionMappings.stream()
-//                .distinct() // Loại bỏ các phần tử trùng lặp (nếu cần)
-//                .sorted(Comparator
-//                        .comparingInt(PackagepProjectionMapping::getPackageFeatureId)
-//                        .thenComparingInt(PackagepProjectionMapping::getPackageFeaturePackageId)) // Sắp xếp
-//                .peek(item -> loopCounter.incrementAndGet()) // Tăng counter mỗi lần duyệt
-//                .map(packagepProjectionMapping -> {
-//                    loopCreateOppPackageFeature.incrementAndGet();
-//                    loopCreateOpp.incrementAndGet();
-//
-//                    // Chuyển đổi PackagepProjectionMapping thành PackagesFeatureResponse
-//                    return PackagesFeatureResponse.builder()
-//                            .id(packagepProjectionMapping.getPackageFeatureId())
-//                            .feature(packagepProjectionMapping.getPackageFeatureName())
-//                            .packageId(packagepProjectionMapping.getPackageFeaturePackageId())
-//                            .build();
-//                })
-//                .collect(Collectors.toSet());
-//    }
 
     public PackagesServiceImpl(PackagesRepository repository, PackagesRepository packagesRepository, PackagesFeatureRepository packagesFeatureRepository, PaymentTermServiceImpl paymentTermService, PaymentTermRepository paymentTermRepository,
 //                               PaymentTermServiceImpl paymentTermService,
-                               CategoryRepository categoryRepository, EntityCascadeDeletionUtil deletionUtil, JdbcTemplate jdbcTemplate) {
+                               CategoryRepository categoryRepository, EntityCascadeDeletionUtil deletionUtil, JdbcTemplate jdbcTemplate, TranslationServiceImpl translationService, TranslationKeyServiceImpl translationKeyService, TranslationKeyRepository translationKeyRepository, TranslationRepository translationRepository) {
         super(repository); // Truyền repository vào lớp cha
         this.packagesRepository = packagesRepository;
         this.packagesFeatureRepository = packagesFeatureRepository;
@@ -87,22 +70,30 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         this.categoryRepository = categoryRepository;
         this.deletionUtil = deletionUtil;
         this.jdbcTemplate = jdbcTemplate;
+        this.translationService = translationService;
+        this.translationKeyService = translationKeyService;
+        this.translationKeyRepository = translationKeyRepository;
+        this.translationRepository = translationRepository;
     }
 
     @Transactional
     @Override
     public PackagesResponse createPackage(PackagesRequest
-                                                  packagesRequest, PaymentTermRequest paymentTermRequest) {
+                                                  packagesRequest, PaymentTermRequest paymentTermRequest, Integer languageId) {
         log.error("đa vao service");
 
 
         // tạo package
         Packages packages = new Packages();
-        packages.setName(packagesRequest.getName());
-        packages.setDescription(packagesRequest.getDescription());
+        save(packages);
+        Integer nameTranslationKeyId = translationService.createTranslationForNewEntity(packages, packagesRequest, languageId, "name");
+        Integer descriptionTranslationKeyId = translationService.createTranslationForNewEntity(packages, packagesRequest, languageId, "description");
+
+        packages.setNameTranslationKeyId(nameTranslationKeyId);
+        packages.setDescriptionTranslationKeyId(descriptionTranslationKeyId);
         Categories categories = categoryRepository.findById(packagesRequest.getCategoriesId()).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
         packages.setCategoriesId(categories.getId());
-        packages.setDepositPercent(packagesRequest.getDepositPercent() != null ? packagesRequest.getDepositPercent() : 0);
+//        packages.setDepositPercent(packagesRequest.getDepositPercent() != null ? packagesRequest.getDepositPercent() : 0);
         try {
             packages = save(packages);
         } catch (Exception e) {
@@ -116,7 +107,9 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         Set<spring.boot.webcococo.entities.PackagesFeature> packagesFeatureList = new HashSet<>();
         for (PackageFeatureRequest packagesFeatureRequest : packagesRequest.getPackagesFeatureRequestList()) {
             PackagesFeature packagesFeature = new PackagesFeature();
-            packagesFeature.setFeature(packagesFeatureRequest.getFeature());
+            packagesFeatureRepository.save(packagesFeature);
+            Integer featureTranslationKeyId = translationService.createTranslationForNewEntity(packagesFeature, packagesFeatureRequest, languageId, "feature");
+            packagesFeature.setFeatureTranslationKeyId(featureTranslationKeyId);
             packagesFeature.setPackageId(packages.getId());
             packagesFeatureList.add(packagesFeature);
         }
@@ -134,7 +127,7 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         //createPaymentTerm--------------------------------------
         PaymentTermResponse paymentTermResponse;
         try {
-            paymentTermResponse = paymentTermService.createPaymentTerm(paymentTermRequest, packages.getId(), null);
+            paymentTermResponse = paymentTermService.createPaymentTerm(paymentTermRequest, packages.getId(), null, languageId);
         } catch (Exception e) {
             throw e;
         }
@@ -144,16 +137,14 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
 
 
     @Override
-    public PackagesResponse updatePackage(Integer id, PackagesRequest packagesRequest, PaymentTermRequest paymentTermRequest) {
+    public PackagesResponse updatePackage(Integer id, PackagesRequest packagesRequest, PaymentTermRequest paymentTermRequest, Integer languageId) {
 
 
         // createtpackages-------------------------------------
         Packages packages = findById(id).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-        packages.setName(packagesRequest.getName());
-        packages.setDescription(packagesRequest.getDescription());
+
         Categories categories = categoryRepository.findById(packagesRequest.getCategoriesId()).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
         packages.setCategoriesId(categories.getId());
-        packages.setDepositPercent(packagesRequest.getDepositPercent());
 
         try {
             packages = save(packages);
@@ -168,7 +159,6 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         packagesFeatureRepository.deleteAll(existingFeatures);
         for (PackageFeatureRequest packagesFeatureRequest : packagesRequest.getPackagesFeatureRequestList()) {
             PackagesFeature packagesFeature = new PackagesFeature();
-            packagesFeature.setFeature(packagesFeatureRequest.getFeature());
             packagesFeature.setPackageId(packages.getId());
             existingFeatures.add(packagesFeature);
         }
@@ -185,7 +175,7 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         //updatePaymentTerm--------------------------------------
         PaymentTermResponse paymentTermResponse;
         try {
-            paymentTermResponse = paymentTermService.createPaymentTerm(paymentTermRequest, packages.getId(), null);
+            paymentTermResponse = paymentTermService.createPaymentTerm(paymentTermRequest, packages.getId(), null, languageId);
         } catch (Exception e) {
             throw e;
         }
@@ -193,58 +183,73 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
     }
 
 
-
-
-
-
-
-
-    public Set<PackagesResponse> getAllPackageByCategorieId(Integer categorieId) throws SQLException {
+    public Set<PackagesResponse> getAllPackageByCategorieId(Integer categorieId, String languageCode) throws SQLException {
         String query = """
-                  SELECT\s
-                                 p.id AS p_id,\s
-                                 p.name AS p_name,\s
-                                 p.description AS p_description,\s
-                                 p.categories_id AS p_categories_id,\s
-                                 p.deposit_percent AS p_deposit_percent,\s
-                                 ppi.image AS p_image,
-                                 pf.id AS pf_id,\s
-                                 pf.feature AS pf_name,\s
-                                 pt.id AS pt_id,\s
-                                 pt.name AS pt_name,
-                                 pt.price AS pt_price,\s
-                                 pcb.id AS pcb_id,\s
-                                 pcb.min_budget AS pcb_min_budget,\s
-                                 pcb.max_budget AS pcb_max_budget,\s
-                                 pcb.fixed_fee AS pcb_fixed_fee,\s
-                                 pcb.percentage_fee AS pcb_percentage_fee,\s
-                                 pcm.id AS pcm_id,\s
-                                 pcm.price AS pcm_price,\s
-                                 pcm.duration_months AS pcm_duration_months
-                             FROM\s
-                                 packages p
-                             LEFT JOIN\s
-                                 packages_feature pf ON p.id = pf.package_id
-                             LEFT JOIN\s
-                                 product_package_images ppi ON p.id =  ppi.package_id
-                             LEFT JOIN\s
-                                 payment_terms pt ON p.id = pt.package_id
-                             LEFT JOIN\s
-                                 payment_condition_on_budget pcb ON pt.id = pcb.payment_terms_id
-                             LEFT JOIN\s
-                                 payment_condition_on_monthly pcm ON pt.id = pcm.payment_terms_id
-                             WHERE
-                                 p.categories_id = ?;
+            
+                SELECT
+                            p.id AS p_id,
+                            t_p_name.content  AS p_name,
+                           t_p_description.content AS p_description,
+                            p.categories_id AS p_categories_id,
+                            ppi.image AS p_image,
+                            pf.id AS pf_id,
+                            t_pf_feature.content  AS pf_name,
+                            pt.id AS pt_id,
+                            t_pt_p.content AS pt_price,
+                            t_pt_d.content AS pt_deposit_percent,
+                             pcb.id AS pcb_id,
+                            pcb.min_budget AS pcb_min_budget,
+                            pcb.max_budget AS pcb_max_budget,
+                            pcb.fixed_fee AS pcb_fixed_fee,
+                            pcb.percentage_fee AS pcb_percentage_fee,
+                            pcm.id AS pcm_id,
+                            pcm.price AS pcm_price,
+                            pcm.duration_months AS pcm_duration_months
+                        FROM
+                            packages p
+                           LEFT JOIN
+                            translation_key tk_p_n ON p.name_translation_key_id = tk_p_n.id
+                           LEFT JOIN
+                            translation t_p_name ON t_p_name.translation_key_id = tk_p_n.id
+                              LEFT JOIN
+                            translation_key tk_p_d ON p.description_translation_key_id = tk_p_d.id
+                           LEFT JOIN
+                            translation t_p_description ON t_p_description.translation_key_id = tk_p_d.id
+                        LEFT JOIN
+                            packages_feature pf ON p.id = pf.package_id
+                             LEFT JOIN
+                            translation_key tk_pf_f ON pf.feature_translation_key_id = tk_pf_f.id
+                           LEFT JOIN
+                            translation t_pf_feature ON t_pf_feature.translation_key_id = tk_pf_f.id
+                        LEFT JOIN
+                            product_package_images ppi ON p.id = ppi.package_id
+                        LEFT JOIN
+                            payment_terms pt ON p.id = pt.package_id
+                              LEFT JOIN
+                            translation_key tk_pt_p ON pt.price_translation_key_id  = tk_pt_p.id
+                           LEFT JOIN
+                            translation t_pt_p ON t_pt_p.translation_key_id = tk_pt_p.id   \s
+                                LEFT JOIN
+                            translation_key tk_pt_d ON pt.deposit_percent_translation_key_id  = tk_pt_d.id
+                           LEFT JOIN
+                            translation t_pt_d ON t_pt_d.translation_key_id = tk_pt_d.id     \s
+                        LEFT JOIN
+                            payment_condition_on_budget pcb ON pt.id = pcb.payment_terms_id
+                        LEFT JOIN
+                            payment_condition_on_monthly pcm ON pt.id = pcm.payment_terms_id
+                            LEFT JOIN
+                            i18n_language inl ON inl.id = t_p_name.i18n_language_id
+                        WHERE
+                        p.categories_id  = ?
+                           AND  inl.code = ?;
                 """;
 
 
         try {
-            return jdbcTemplate.query(query, new Object[]{categorieId}, rs -> {
+            return jdbcTemplate.query(query, new Object[]{categorieId, languageCode}, rs -> {
 
                 Set<PackagepProjectionMapping> packagepProjectionMappings = PackagepProjectionMapping.toPackageMapping(rs, loopCounter, loopCreateOpp);
-
 //                Set<Integer> packageIdList = packagepProjectionMappings.stream().map(PackagepProjectionMapping::getPackageId).collect(Collectors.toSet());
-
                 return mapToPackagesResponseList(packagepProjectionMappings);
             });
 
@@ -274,16 +279,12 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
 // Bước 1: Nhóm dữ liệu theo packageId
 
         Map<Integer, Set<PackagepProjectionMapping>> groupedByPackageId = packagepProjectionMappings.stream()
-                .peek(item -> {
-                    loopCounter.incrementAndGet();
-                })
                 .collect(Collectors.groupingBy(PackagepProjectionMapping::getPackageId, Collectors.toSet()));
+
 
 // Bước 2: Duyệt qua từng nhóm packageId và tạo response
         Set<PackagesResponse> packageResponses = groupedByPackageId.entrySet().stream()
-                .peek(item -> {
-                    loopCounter.incrementAndGet();
-                })
+
                 .map(entry -> {
                     Integer packageId = entry.getKey();  // packageId là key của Map
                     Set<PackagepProjectionMapping> mappings = entry.getValue();  // mappings là value của Map
@@ -296,69 +297,78 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
                 })
                 .collect(Collectors.toSet());
 
-        log.error("loopCounter:{}", loopCounter);
-
-        log.error("loopCreateOpp:{}", loopCreateOpp);
-
-
-        log.error("loopCreateOppPackageFeature:{}", loopCreateOppPackageFeature);
-
-        log.error("loopCreateOppPaymentConditionOnMonthly:{}", loopCreateOppPaymentConditionOnMonthly);
-
-        log.error("loopCreateOppPaymentMethods:{}", loopCreateOppPaymentMethods);
-
-        log.error("loopCreateOppBankGateway:{}", loopCreateOppBankGateway);
-
 
         return packageResponses;
     }
 
-    public PackagesResponse getPackageById(Integer id) {
+    public PackagesResponse getPackageById(Integer id, String languageCode) {
         String query = """
-
-                                  \s
-                  SELECT\s
-                    p.id AS p_id,\s
-                    p.name AS p_name,\s
-                    p.description AS p_description,\s
-                    p.categories_id AS p_categories_id,\s
-                    p.deposit AS p_deposit,
-                    ppi.image AS p_image,
-                    pf.id AS pf_id,\s
-                    pf.feature AS pf_name,\s
-                    pt.id AS pt_id,\s
-                    pt.name AS pt_name,
-                    pt.price AS pt_price,\s
-                    pcb.id AS pcb_id,\s
-                    pcb.min_budget AS pcb_min_budget,\s
-                    pcb.max_budget AS pcb_max_budget,\s
-                    pcb.fixed_fee AS pcb_fixed_fee,\s
-                    pcb.percentage_fee AS pcb_percentage_fee,\s
-                    pcm.id AS pcm_id,\s
-                    pcm.price AS pcm_price,\s
-                    pcm.duration_months AS pcm_duration_months
-                                FROM\s
-                    packages p
-                                LEFT JOIN\s
-                    packages_feature pf ON p.id = pf.package_id
-                                LEFT JOIN\s
-                    product_package_images ppi ON p.id = ppi.package_id
-                                LEFT JOIN\s
-                    payment_terms pt ON p.id = pt.package_id
-                                LEFT JOIN\s
-                    payment_condition_on_budget pcb ON pt.id = pcb.payment_terms_id
-                                LEFT JOIN\s
-                    payment_condition_on_monthly pcm ON pt.id = pcm.payment_terms_id
-                                WHERE\s
-                    p.id = ?;
-                """
-
-       ;
-        return jdbcTemplate.query(query, new Object[]{id}, rs -> {
+                 SELECT
+                                p.id AS p_id,
+                                t_p_name.content  AS p_name,
+                               t_p_description.content AS p_description,
+                                p.categories_id AS p_categories_id,
+                                ppi.image AS p_image,
+                                pf.id AS pf_id,
+                                t_pf_feature.content  AS pf_name,
+                                pt.id AS pt_id,
+                                t_pt_p.content AS pt_price,
+                                t_pt_d.content AS pt_deposit_percent,
+                                 pcb.id AS pcb_id,
+                                pcb.min_budget AS pcb_min_budget,
+                                pcb.max_budget AS pcb_max_budget,
+                                pcb.fixed_fee AS pcb_fixed_fee,
+                                pcb.percentage_fee AS pcb_percentage_fee,
+                                pcm.id AS pcm_id,
+                                pcm.price AS pcm_price,
+                                pcm.duration_months AS pcm_duration_months
+                            FROM
+                                packages p
+                               LEFT JOIN
+                                translation_key tk_p_n ON p.name_translation_key_id = tk_p_n.id
+                               LEFT JOIN
+                                translation t_p_name ON t_p_name.translation_key_id = tk_p_n.id
+                                  LEFT JOIN
+                                translation_key tk_p_d ON p.description_translation_key_id = tk_p_d.id
+                               LEFT JOIN
+                                translation t_p_description ON t_p_description.translation_key_id = tk_p_d.id
+                            LEFT JOIN
+                                packages_feature pf ON p.id = pf.package_id
+                                 LEFT JOIN
+                                translation_key tk_pf_f ON pf.feature_translation_key_id = tk_pf_f.id
+                               LEFT JOIN
+                                translation t_pf_feature ON t_pf_feature.translation_key_id = tk_pf_f.id
+                            LEFT JOIN
+                                product_package_images ppi ON p.id = ppi.package_id
+                            LEFT JOIN
+                                payment_terms pt ON p.id = pt.package_id
+                                  LEFT JOIN
+                                translation_key tk_pt_p ON pt.price_translation_key_id  = tk_pt_p.id
+                               LEFT JOIN
+                                translation t_pt_p ON t_pt_p.translation_key_id = tk_pt_p.id   \s
+                                    LEFT JOIN
+                                translation_key tk_pt_d ON pt.deposit_percent_translation_key_id  = tk_pt_d.id
+                               LEFT JOIN
+                                translation t_pt_d ON t_pt_d.translation_key_id = tk_pt_d.id     \s
+                            LEFT JOIN
+                                payment_condition_on_budget pcb ON pt.id = pcb.payment_terms_id
+                            LEFT JOIN
+                                payment_condition_on_monthly pcm ON pt.id = pcm.payment_terms_id
+                                LEFT JOIN
+                                i18n_language inl ON inl.id = t_p_name.i18n_language_id
+                            WHERE
+                                p.id = ?
+                               AND  inl.code = ?;
+                """;
+        return jdbcTemplate.query(query, new Object[]{id, languageCode}, rs -> {
             Set<PackagepProjectionMapping> packagepProjectionMappings = PackagepProjectionMapping.toPackageMapping(rs, loopCounter, loopCreateOpp);
             // Chỉ cần gọi rs.next() một lần
 
-            return mapToPackagesResponse(packagepProjectionMappings);
+            if (!packagepProjectionMappings.isEmpty()) {
+                return mapToPackagesResponse(packagepProjectionMappings);
+            } else {
+                throw new AppException(ErrorCodeEnum.DATA_NOT_FOUND);
+            }
         });
     }
 
@@ -371,7 +381,6 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
                 .name(packagepProjectionMapping.getPackageName())
                 .description(packagepProjectionMapping.getPackageDescription())
                 .categoriesId(packagepProjectionMapping.getPackageCategoriesId())
-                .deposit(packagepProjectionMapping.getPackageDepositPercent())
                 .packagesFeatureResponses(mapPackagesFeatures(packagepProjectionMappings))  // Lấy danh sách feature
                 .packageImagesResponses(mapPackageImages(packagepProjectionMappings))
                 .paymentTermResponse(mapPaymentTerm(packagepProjectionMappings))
@@ -379,6 +388,7 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
                 // Lấy payment terms
                 .build();
     }
+
 
     private Set<PackagesFeatureResponse> mapPackagesFeatures(Set<PackagepProjectionMapping> packagepProjectionMappings) {
         // Sử dụng TreeSet với Comparator trực tiếp
@@ -453,13 +463,22 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
         // Lấy phần tử đầu tiên
         PackagepProjectionMapping packageTerm = packageTermProjectionMappings.iterator().next();
 
-        // Xây dựng đối tượng PaymentTermResponse
+        boolean isPaymentConditionOnMonthlyResponsesEmpty = packageTermProjectionMappings.stream()
+                .noneMatch(e -> e.getPaymentConditionMonthlyId() == null); // Kiểm tra nếu không có phần tử nào thỏa mãn
+
+        log.error("isPaymentConditionOnMonthlyResponsesEmpty:{}", isPaymentConditionOnMonthlyResponsesEmpty);
+// Xây dựng đối tượng PaymentTermResponse
         return PaymentTermResponse.builder()
-                .name(packageTerm.getPaymentTermsName())
                 .price(packageTerm.getPaymentTermsPrice())
-                .paymentConditionOnMonthlyResponses(mapPaymentConditionOnMonthly(packageTermProjectionMappings))
+                .depositPercent(packageTerm.getPackageDepositPercent())
+                .paymentConditionOnMonthlyResponses(
+                        isPaymentConditionOnMonthlyResponsesEmpty ? null : mapPaymentConditionOnMonthly(packageTermProjectionMappings)
+                ) // Gửi null nếu danh sách rỗng
                 .build();
     }
+
+
+
 
 
     private Set<PaymentConditionOnMonthlyResponse> mapPaymentConditionOnMonthly(Set<PackagepProjectionMapping> packageTermProjectionMappings) throws SQLException {
@@ -702,9 +721,9 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
 
     @Transactional
     @Override
-    public PackagesResponse getPackage(Integer id) {
+    public PackagesResponse getPackage(Integer id, String langguageCode) {
         try {
-            return getPackageById(id);
+            return getPackageById(id, langguageCode);
         } catch (Exception e) {
             throw e;
         }
@@ -713,26 +732,89 @@ public class PackagesServiceImpl extends BaseServiceImpl<Packages, Integer, Pack
 
     @Transactional
     @Override
-    public Set<PackagesResponse> getAllPackage(Integer categorieId) throws SQLException {
+    public Set<PackagesResponse> getAllPackage(Integer categorieId, String languageCode) throws SQLException {
         try {
-            return getAllPackageByCategorieId(categorieId);
+            return getAllPackageByCategorieId(categorieId, languageCode);
         } catch (Exception e) {
             throw e;
         }
     }
 
 
+
+
     @Override
+    @Transactional
     public void deletePackage(Integer id) {
         try {
+            // Tìm gói Package
             Packages packages = findById(id).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-            log.error("packagesid:{}", packages.getId());
-            PaymentTerms paymentTerms = paymentTermRepository.findByPackagesId(packages.getId()).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
-            paymentTermService.deletePaymentTerm(paymentTerms.getId());
-            deleteById(packages.getId());
+
+            log.info("Deleting package with id: {}", packages.getId());
+
+            // Danh sách chứa Translation và TranslationKey cần xóa
+            // Danh sách chứa Translation và TranslationKey cần xóa
+            List<TranslationKey> translationKeyListToDelete = new ArrayList<>();
+            List<Translation> translationListToDelete = new ArrayList<>();
+
+// Fetching TranslationKey for namePackages with null check
+            TranslationKey namePackagesTranslationKey = translationKeyService.findById(packages.getNameTranslationKeyId()).orElse(null);
+            if (namePackagesTranslationKey != null) {
+                // Fetching Translations for namePackages
+                List<Translation> translationsNamePackages = translationRepository.findAllByTranslationKeyId(namePackagesTranslationKey.getId()).orElse(Collections.emptyList());
+                translationKeyListToDelete.add(namePackagesTranslationKey);
+                translationListToDelete.addAll(translationsNamePackages);
+            }
+
+// Fetching TranslationKey for descriptionPackages with null check
+            TranslationKey descriptionPackagesTranslationKey = translationKeyService.findById(packages.getDescriptionTranslationKeyId()).orElse(null);
+            if (descriptionPackagesTranslationKey != null) {
+                // Fetching Translations for descriptionPackages
+                List<Translation> translationsDescriptionPackages = translationRepository.findAllByTranslationKeyId(descriptionPackagesTranslationKey.getId()).orElse(Collections.emptyList());
+                translationKeyListToDelete.add(descriptionPackagesTranslationKey);
+                translationListToDelete.addAll(translationsDescriptionPackages);
+            }
+
+
+            // Xóa PaymentTerms
+            paymentTermRepository.findByPackagesId(packages.getId()).ifPresent(paymentTerms -> {
+                if (paymentTerms.getPriceTranslationKeyId() != null) {
+                    addTranslationsToDelete(paymentTerms.getPriceTranslationKeyId(), translationKeyListToDelete, translationListToDelete);
+                }
+                if (paymentTerms.getDepositPercentTranslationKeyId() != null) {
+                    addTranslationsToDelete(paymentTerms.getDepositPercentTranslationKeyId(), translationKeyListToDelete, translationListToDelete);
+                }
+                paymentTermService.deletePaymentTerm(paymentTerms.getId());
+            });
+
+            // Xóa PackagesFeature và các Translation liên quan
+            packagesFeatureRepository.getAllByPackageId(packages.getId()).ifPresent(packagesFeatures -> {
+                packagesFeatures.forEach(feature -> addTranslationsToDelete(feature.getFeatureTranslationKeyId(), translationKeyListToDelete, translationListToDelete));
+                packagesFeatureRepository.deleteAll(packagesFeatures);
+            });
+
+            // Xóa tất cả Translation và TranslationKey
+            translationRepository.deleteAll(translationListToDelete);
+            translationKeyRepository.deleteAll(translationKeyListToDelete);
+
+            // Xóa các liên kết khác liên quan đến package
             deletionUtil.deleteByParentId(packages.getId(), "package_id");
+
+            // Xóa Package
+            deleteById(packages.getId());
         } catch (Exception e) {
+            log.error("Error deleting package with id: {}", id, e);
             throw e;
+        }
+    }
+
+    private void addTranslationsToDelete(Integer translationKeyId, List<TranslationKey> translationKeyList, List<Translation> translationList) {
+        if (translationKeyId != null) {
+            TranslationKey translationKey = translationKeyService.findById(translationKeyId).orElseThrow(() -> new AppException(ErrorCodeEnum.DATA_NOT_FOUND));
+            List<Translation> translations = translationRepository.findAllByTranslationKeyId(translationKey.getId())
+                    .orElse(Collections.emptyList());
+            translationKeyList.add(translationKey);
+            translationList.addAll(translations);
         }
     }
 

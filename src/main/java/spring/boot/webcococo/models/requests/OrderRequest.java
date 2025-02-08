@@ -44,12 +44,13 @@ public class OrderRequest {
     @JsonProperty("cart_items")
     private List<CartItemRequest> cartItems;
 
-
-
     @NotNull(message = "payment_method items cannot be null")
     @JsonProperty("payment_method")
     private PaymentMethodRequest paymentMethodRequest;
 
+
+    @JsonProperty("bank_gateway_detail_id")
+    private Integer bankGateWayDetailId;
 
     @AllArgsConstructor
     @NoArgsConstructor
@@ -62,7 +63,6 @@ public class OrderRequest {
 
         @JsonProperty("bank_gateway_id")
         private Integer bankGatewayId;
-
 
         @JsonProperty("bank_gateway_details_id")
         private Integer bankGatewayDetailId;

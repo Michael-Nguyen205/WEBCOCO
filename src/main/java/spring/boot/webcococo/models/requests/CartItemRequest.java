@@ -30,8 +30,7 @@ public class CartItemRequest {
     private int quantity;
 
 
-    @Min(value = 0, message = "Price must be a positive value")
-    private BigDecimal price;
+
 
 
     @JsonProperty("payment_condition_on_monthly_id")
@@ -42,8 +41,6 @@ public class CartItemRequest {
     private Integer paymentConditionBudgetId;
 
 
-    @JsonProperty("payment_method")
-    private PaymentMethodRequest paymentMethod;
 
 
 }

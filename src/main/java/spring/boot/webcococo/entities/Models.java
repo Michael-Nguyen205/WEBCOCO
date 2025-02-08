@@ -21,7 +21,8 @@ public class Models extends BaseEntity {
     @Column(name = "name")
     private String name;
 
-    @NotBlank
+//    @NotBlank(message = "{description.not.blank}")
+//   @NotBlank(message = "description khong được thiếu")
     @Column(name = "description")
     private String description;
 

@@ -1,6 +1,7 @@
 package spring.boot.webcococo.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
@@ -11,7 +12,7 @@ public class I18Language {
     @Id // Đánh dấu khóa chính
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tự động tăng giá trị khóa chính
     private Integer id;
-
+    @NotBlank
     @Column(nullable = false, unique = true, length = 10) // Mã ngôn ngữ (ví dụ: "en", "vi")
     private String code;
 
@@ -24,6 +25,10 @@ public class I18Language {
     @Column(name = "native_name", length = 100) // Tên ngôn ngữ gốc (ví dụ: "Tiếng Việt")
     private String nativeName;
 
-    @Column(name = "is_active") // Ngôn ngữ có hoạt động không
-    private Boolean isActive ;
+
+    @Column(name = "is_default")
+    private Boolean isDefault = false; // Mặc định là false
+
+    @Column(name = "is_active")
+    private Boolean isActive = true; // Mặc định là true
 }

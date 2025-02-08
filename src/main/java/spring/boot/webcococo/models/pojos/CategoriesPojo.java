@@ -14,7 +14,7 @@ public class CategoriesPojo {
     private String name; // Tên của danh mục
     private Integer parentId;
     private Integer i18nLanguageId;
-    private String languageCode;// ID của danh mục cha (null nếu là root)
+    private String  languageCode;// ID của danh mục cha (null nếu là root)
     private Boolean isActive;
     private Integer level; // Danh sách các danh mục con
 

@@ -53,13 +53,15 @@ public class PackagesController {
 //                .toList();
 //    }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse createPackages(@RequestBody @Valid PackagesRequest packagesRequest ) {
-        try {
 
+
+
+    @PostMapping("/{languageId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse createPackages(@RequestBody @Valid PackagesRequest packagesRequest, @PathVariable Integer languageId ) {
+        try {
             log.error("đa vao controller");
-            PackagesResponse response = packagesService.createPackage(packagesRequest , packagesRequest.getPaymentTermRequest());
+            PackagesResponse response = packagesService.createPackage(packagesRequest , packagesRequest.getPaymentTermRequest(),languageId);
             return new ApiResponse(null, "response created successfully", null, response);
         }catch (Exception e){
             e.printStackTrace();
@@ -67,22 +69,46 @@ public class PackagesController {
         }
     }
 
-    @PutMapping("/{id}")
+
+
+
+
+
+
+
+
+
+    @PutMapping("/{id}/{langId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse updatePackages(@RequestBody @Valid PackagesRequest packagesRequest  ,@PathVariable Integer id) {
+    public ApiResponse updatePackages(@RequestBody @Valid PackagesRequest packagesRequest  ,@PathVariable Integer id,@PathVariable Integer langId ) {
         try {
             log.error("đa vao controller");
-            PackagesResponse response = packagesService.updatePackage(id,packagesRequest , packagesRequest.getPaymentTermRequest());
+            PackagesResponse response = packagesService.updatePackage(id,packagesRequest , packagesRequest.getPaymentTermRequest(),langId);
             return new ApiResponse(null, "response created successfully", null, response);
         }catch (Exception e){
             e.printStackTrace();
             throw e;
         }
     }
+
+//    @DeleteMapping("/{id}")
+//    @ResponseStatus(HttpStatus.OK)
+//    public ApiResponse deletePackages(@PathVariable Integer id) {
+//
+//        try {
+//            packagesService.deletePackage(id);
+//            return new ApiResponse(null, "delete successfully", null, null);
+//
+//        }catch (Exception e){
+//            throw e;
+//        }
+//    }
+
+
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse deletePackages(@PathVariable Integer id) {
+    public ApiResponse deletePackage(@PathVariable Integer id) {
 
         try {
             packagesService.deletePackage(id);
@@ -97,10 +123,10 @@ public class PackagesController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse getPackages(@PathVariable Integer id) {
+    public ApiResponse getPackages(@PathVariable Integer id,@RequestHeader("Accept-Language") String acceptLanguage) {
         try {
-            PackagesResponse response =  packagesService.getPackage(id);
-            return new ApiResponse(null, "delete successfully", null, response);
+            PackagesResponse response =  packagesService.getPackage(id,acceptLanguage);
+            return new ApiResponse(null, "get successfully", null, response);
 
         }catch (Exception e){
             throw e;
@@ -112,20 +138,21 @@ public class PackagesController {
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse getAllPackages(@RequestParam(name = "category_id", defaultValue = "") Integer categorieId) throws SQLException, JsonProcessingException {
+    public ApiResponse getAllPackages(@RequestParam(name = "category_id", defaultValue = "") Integer categorieId ,@RequestHeader("Accept-Language") String acceptLanguage)
+            throws SQLException, JsonProcessingException {
         log.error("categorieId: {}", categorieId);
+        log.error("acceptLanguage: {}", acceptLanguage);
+
         try {
             long startTime = System.currentTimeMillis();
 
 
-            Set<PackagesResponse> response = packageRedis.getPackagesFromRedis(null,categorieId);
-
+            Set<PackagesResponse> response = packageRedis.getPackagesFromRedis(null,categorieId,acceptLanguage);
             if(response == null || response.isEmpty()){
                 log.error("khong co du lieu trong cache");
-                response = packagesService.getAllPackage(categorieId);
+                response = packagesService.getAllPackage(categorieId,acceptLanguage);
             }
-
-            packageRedis.savePackagesToRedis( response,null , categorieId);
+            packageRedis.savePackagesToRedis( response,null , categorieId,acceptLanguage);
 
 
             long endTime = System.currentTimeMillis();

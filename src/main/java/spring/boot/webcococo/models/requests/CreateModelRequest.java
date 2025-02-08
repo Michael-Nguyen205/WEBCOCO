@@ -19,7 +19,6 @@ public class CreateModelRequest {
     @JsonProperty("model_name")
     private String name;
 
-    @NotEmpty(message = "model_description cannot be blank")
     @JsonProperty("model_description")
     private String description;
 

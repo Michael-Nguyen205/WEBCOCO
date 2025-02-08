@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 public class WebcococoApplication {
 
+
     public static void main(String[] args) {
         SpringApplication.run(WebcococoApplication.class, args);
     }

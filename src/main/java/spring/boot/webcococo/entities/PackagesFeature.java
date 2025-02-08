@@ -12,8 +12,8 @@ public class PackagesFeature extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "feature")
-    private String  feature;
+    @Column(name = "feature_translation_key_id")
+    private Integer  featureTranslationKeyId;
 
     @Column(name = "package_id")
     private Integer packageId;

@@ -7,9 +7,8 @@ import spring.boot.webcococo.models.response.PaymentResponse;
 public interface IOrderService {
 
 
-    OrderResponse createOrder(OrderRequest request , String idAdress);
+    OrderResponse createOrder(OrderRequest request , String idAdress, String langCode);
 
     String approveOrder(String status ,Integer orderId);
 
-    PaymentResponse payOrder(Integer orderId , String ipAdress,Integer bankGateWayDetalId);
 }
